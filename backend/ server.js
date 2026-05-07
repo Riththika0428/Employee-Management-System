@@ -4,6 +4,7 @@ const cors = require('cors');
 const connectDB = require('./config/db');
 const authRoutes = require('./routes/authRoutes');
 const errorHandler = require('./middleware/errorMiddleware');
+const employeeRoutes = require('./routes/employeeRoutes');
 
 // Load env vars
 dotenv.config();
@@ -22,6 +23,7 @@ app.use(cors());
 
 // Mount routes
 app.use('/api/auth', authRoutes);
+app.use('/api/employees', employeeRoutes);
 
 // Test route (protected)
 app.get('/api/test', (req, res) => {
