@@ -48,6 +48,20 @@ const employeeSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    attendanceSettings: {
+  defaultCheckInTime: {
+    type: String,
+    default: '09:00',
+  },
+  defaultCheckOutTime: {
+    type: String,
+    default: '18:00',
+  },
+  workHoursPerDay: {
+    type: Number,
+    default: 9,
+  },
+},
   },
   {
     timestamps: true,
