@@ -8,6 +8,7 @@ const employeeRoutes = require('./routes/employeeRoutes');
 const attendanceRoutes = require('./routes/attendanceRoutes');
 const taskRoutes = require('./routes/taskRoutes');
 const payrollRoutes = require('./routes/payrollRoutes');
+const leaveRoutes = require('./routes/leaveRoutes');
 
 // Load env vars
 dotenv.config();
@@ -30,6 +31,7 @@ app.use('/api/employees', employeeRoutes);
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/payroll', payrollRoutes);
+app.use('/api/leaves', leaveRoutes);
 
 // Test route (protected)
 app.get('/api/test', (req, res) => {
