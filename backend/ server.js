@@ -6,6 +6,7 @@ const authRoutes = require('./routes/authRoutes');
 const errorHandler = require('./middleware/errorMiddleware');
 const employeeRoutes = require('./routes/employeeRoutes');
 const attendanceRoutes = require('./routes/attendanceRoutes');
+const taskRoutes = require('./routes/taskRoutes');
 
 // Load env vars
 dotenv.config();
@@ -26,6 +27,7 @@ app.use(cors());
 app.use('/api/auth', authRoutes);
 app.use('/api/employees', employeeRoutes);
 app.use('/api/attendance', attendanceRoutes);
+app.use('/api/tasks', taskRoutes);
 
 // Test route (protected)
 app.get('/api/test', (req, res) => {
