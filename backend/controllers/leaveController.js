@@ -2,6 +2,7 @@ const Leave = require('../models/Leave');
 const LeaveBalance = require('../models/LeaveBalance');
 const Employee = require('../models/Employee');
 const User = require('../models/User');
+const { notificationTriggers } = require('../services/notificationService');
 
 // Helper function to calculate working days between dates
 const calculateWorkingDays = (startDate, endDate) => {
@@ -495,6 +496,13 @@ const approveLeave = async (req, res) => {
       const workingDays = calculateWorkingDays(leave.startDate, leave.endDate);
       await balance.updateBalance(leave.leaveType, workingDays, true);
     }
+
+    // Trigger real-time/email notification for leave approval
+    try {
+      await notificationTriggers.leaveStatusUpdate(leave, 'approved');
+    } catch (ntfErr) {
+      console.error('Error triggering leave approval notification:', ntfErr);
+    }
     
     const updatedLeave = await Leave.findById(leave._id)
       .populate({
@@ -553,6 +561,13 @@ const rejectLeave = async (req, res) => {
     
     await leave.save();
     
+    // Trigger real-time/email notification for leave rejection
+    try {
+      await notificationTriggers.leaveStatusUpdate(leave, 'rejected', leave.rejectionReason);
+    } catch (ntfErr) {
+      console.error('Error triggering leave rejection notification:', ntfErr);
+    }
+
     const updatedLeave = await Leave.findById(leave._id)
       .populate({
         path: 'employee',

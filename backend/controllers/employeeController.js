@@ -1,5 +1,6 @@
 const Employee = require('../models/Employee');
 const User = require('../models/User');
+const { notificationTriggers } = require('../services/notificationService');
 
 // @desc    Create new employee
 // @route   POST /api/employees
@@ -63,6 +64,15 @@ const createEmployee = async (req, res) => {
     // Populate user details
     const populatedEmployee = await Employee.findById(employee._id)
       .populate('user', 'name email role');
+
+    // Generate temporary password and send welcome notification (real-time + email)
+    try {
+      const tempPassword = Math.random().toString(36).slice(-8); // Generate temp password
+      // Note: We do not change the user's password here. The temp password is for email content only.
+      await notificationTriggers.welcomeEmployee(populatedEmployee.user, populatedEmployee, tempPassword);
+    } catch (ntfErr) {
+      console.error('Error sending welcome notification:', ntfErr);
+    }
 
     res.status(201).json({
       success: true,

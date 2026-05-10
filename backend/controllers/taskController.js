@@ -1,6 +1,7 @@
 const Task = require('../models/Task');
 const Employee = require('../models/Employee');
 const User = require('../models/User');
+const { notificationTriggers } = require('../services/notificationService');
 
 // Helper function to validate status transitions
 const isValidStatusTransition = (currentStatus, newStatus) => {
@@ -81,6 +82,13 @@ const createTask = async (req, res) => {
       estimatedHours: estimatedHours || 0,
     });
     
+    // Trigger notification for task assignment (real-time + email)
+    try {
+      await notificationTriggers.taskAssigned(task, assignedTo, req.user.id);
+    } catch (ntfErr) {
+      console.error('Error triggering task assigned notification:', ntfErr);
+    }
+
     // Populate task details
     const populatedTask = await Task.findById(task._id)
       .populate({

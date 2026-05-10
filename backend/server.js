@@ -3,32 +3,66 @@ const dotenv = require('dotenv');
 const cors = require('cors');
 const http = require('http');
 const socketIo = require('socket.io');
-const connectDB = require('./config/db');
 
-// Route imports
+const connectDB = require('./config/db');
 const authRoutes = require('./routes/authRoutes');
+const errorHandler = require('./middleware/errorMiddleware');
 const employeeRoutes = require('./routes/employeeRoutes');
 const attendanceRoutes = require('./routes/attendanceRoutes');
 const taskRoutes = require('./routes/taskRoutes');
 const payrollRoutes = require('./routes/payrollRoutes');
 const leaveRoutes = require('./routes/leaveRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
-const notificationRoutes = require('./routes/notificationRoutes');
 
-// Middleware imports
-const errorHandler = require('./middleware/errorMiddleware');
 const { setIoInstance } = require('./services/notificationService');
 
-// Load environment variables
+// Load env vars
 dotenv.config();
 
 // Connect to database
 connectDB();
 
 const app = express();
-const server = http.createServer(app);
 
-// Initialize Socket.IO
+// Body parser
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Enable CORS
+app.use(cors());
+
+// Mount routes
+app.use('/api/auth', authRoutes);
+app.use('/api/employees', employeeRoutes);
+app.use('/api/attendance', attendanceRoutes);
+app.use('/api/tasks', taskRoutes);
+app.use('/api/payroll', payrollRoutes);
+app.use('/api/leaves', leaveRoutes);
+app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/notifications', require('./routes/notificationRoutes'));
+
+// Test route (protected)
+app.get('/api/test', (req, res) => {
+  res.json({
+    success: true,
+    message: 'API is working!',
+    endpoints: {
+      register: 'POST /api/auth/register',
+      login: 'POST /api/auth/login',
+      me: 'GET /api/auth/me',
+      adminTest: 'GET /api/auth/admin-only',
+      hrTest: 'GET /api/auth/hr-only',
+    },
+  });
+});
+
+// Error handler middleware
+app.use(errorHandler);
+
+const PORT = process.env.PORT || 5000;
+
+// Create HTTP server and initialize Socket.IO
+const server = http.createServer(app);
 const io = new socketIo.Server(server, {
   cors: {
     origin: process.env.FRONTEND_URL || 'http://localhost:3000',
@@ -57,43 +91,15 @@ io.on('connection', (socket) => {
   });
 });
 
-// Middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(cors());
-
-// Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/employees', employeeRoutes);
-app.use('/api/attendance', attendanceRoutes);
-app.use('/api/tasks', taskRoutes);
-app.use('/api/payroll', payrollRoutes);
-app.use('/api/leaves', leaveRoutes);
-app.use('/api/dashboard', dashboardRoutes);
-app.use('/api/notifications', notificationRoutes);
-
-// Test route
-app.get('/api/test', (req, res) => {
-  res.json({
-    success: true,
-    message: 'API is working!',
-  });
-});
-
-// Error handler middleware
-app.use(errorHandler);
-
-const PORT = process.env.PORT || 5000;
-
-server.listen(PORT, () => {
+const listener = server.listen(PORT, () => {
   console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
 });
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (err, promise) => {
-  console.error(`Error: ${err.message}`);
+  console.error(`Unhandled Rejection: ${err && err.message ? err.message : err}`);
   // Close server & exit process
-  server.close(() => process.exit(1));
+  listener.close(() => process.exit(1));
 });
 
-module.exports = { app, server };
+module.exports = { app, server: listener };

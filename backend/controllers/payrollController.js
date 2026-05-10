@@ -2,6 +2,7 @@ const Payroll = require('../models/Payroll');
 const Employee = require('../models/Employee');
 const User = require('../models/User');
 const Attendance = require('../models/Attendance');
+const { notificationTriggers } = require('../services/notificationService');
 
 // Helper function to calculate overtime pay based on attendance
 const calculateOvertimePay = async (employeeId, month, year, hourlyRate) => {
@@ -96,6 +97,13 @@ const generatePayroll = async (req, res) => {
       notes: notes || '',
     });
     
+    // Trigger notification for payroll generated (real-time + email)
+    try {
+      await notificationTriggers.payrollGenerated(payroll, employeeId);
+    } catch (ntfErr) {
+      console.error('Error triggering payroll generated notification:', ntfErr);
+    }
+
     // Populate payroll details
     const populatedPayroll = await Payroll.findById(payroll._id)
       .populate({
